@@ -1,0 +1,81 @@
+{
+  "groups": {
+    "120363430069975232@g.us": {
+      "antilink": true,
+      "antiEstrangeiro": true,
+      "welcome": true,
+      "mute": {},
+      "warnings": {
+        "91964343083047@lid": 2
+      },
+      "antiFoto": true,
+      "welcomeMessage": "*kmk* @name *bem vindo a meu grupo 🔥*",
+      "welcomePhoto": false,
+      "warnLimit": 3,
+      "antiSpam": true
+    },
+    "120363414092363369@g.us": {
+      "antilink": true,
+      "antiEstrangeiro": false,
+      "antiFoto": false,
+      "welcome": true,
+      "warnLimit": 3,
+      "warnings": {
+        "91964343083047@lid": 1
+      },
+      "mute": {},
+      "welcomePhoto": false,
+      "welcomeMessage": "Olá @group tudo bem @name bem vindo",
+      "antiSpam": false,
+      "rules": "sem link"
+    },
+    "120363296484850900@g.us": {
+      "antilink": false,
+      "antiEstrangeiro": false,
+      "antiFoto": false,
+      "antiSpam": false,
+      "welcome": false,
+      "welcomePhoto": false,
+      "welcomeMessage": "Olá @user, bem-vindo(a) ao grupo @group!",
+      "warnLimit": 3,
+      "warnings": {},
+      "mute": {}
+    },
+    "120363429797605753@g.us": {
+      "antilink": false,
+      "antiEstrangeiro": false,
+      "antiFoto": false,
+      "antiSpam": false,
+      "welcome": false,
+      "welcomePhoto": false,
+      "welcomeMessage": "Olá @user, bem-vindo(a) ao grupo @group!",
+      "warnLimit": 3,
+      "warnings": {},
+      "mute": {}
+    },
+    "120363426073246956@g.us": {
+      "antilink": false,
+      "antiEstrangeiro": false,
+      "antiFoto": false,
+      "antiSpam": false,
+      "welcome": false,
+      "welcomePhoto": false,
+      "welcomeMessage": "Olá @user, bem-vindo(a) ao grupo @group!",
+      "warnLimit": 3,
+      "warnings": {},
+      "mute": {}
+    },
+    "120363408760799259@g.us": {
+      "antilink": false,
+      "antiEstrangeiro": false,
+      "antiFoto": false,
+      "antiSpam": false,
+      "welcome": false,
+      "welcomePhoto": false,
+      "welcomeMessage": "Olá @user, bem-vindo(a) ao grupo @group!",
+      "warnLimit": 3,
+      "warnings": {},
+      "mute": {}
+    }
+  }
+}
