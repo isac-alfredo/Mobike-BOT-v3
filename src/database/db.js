@@ -1,54 +1,75 @@
-const mongoose = require('mongoose');
-const config = require('../../config');
+const fs = require('fs');
+const path = require('path');
 
-// Conexão com MongoDB
-mongoose.connect(config.mongoURI)
-    .then(() => console.log('✅ Conectado ao MongoDB Atlas (Nuvem)!'))
-    .catch((err) => console.error('❌ Erro de conexão MongoDB:', err));
+const databasePath = path.join(__dirname, 'database.json');
 
-// Esquema do Grupo
-const GroupSchema = new mongoose.Schema({
-    jid: { type: String, unique: true },
-    antilink: { type: Boolean, default: false },
-    antiEstrangeiro: { type: Boolean, default: false },
-    antiFoto: { type: Boolean, default: false },
-    antiSpam: { type: Boolean, default: false },
-    welcome: { type: Boolean, default: false },
-    welcomePhoto: { type: Boolean, default: false },
-    welcomeMessage: { type: String, default: 'Olá @user, bem-vindo(a) ao grupo @group!' },
-    rules: { type: String, default: 'As regras deste grupo ainda não foram configuradas.' },
-    warnLimit: { type: Number, default: 3 },
-    warnings: { type: Map, of: Number, default: {} },
-    mute: { type: Map, of: Boolean, default: {} }
-});
+let database = { groups: {} };
 
-const Group = mongoose.model('Group', GroupSchema);
-
-module.exports = {
-    getGroup: async (jid) => {
-        let group = await Group.findOne({ jid });
-        if (!group) group = await Group.create({ jid });
-        return group;
-    },
-    updateGroup: async (jid, data) => {
-        return await Group.findOneAndUpdate({ jid }, { $set: data }, { new: true, upsert: true });
-    },
-    addWarn: async (jid, userId) => {
-        const group = await Group.findOne({ jid }) || await Group.create({ jid });
-        const current = (group.warnings.get(userId) || 0) + 1;
-        group.warnings.set(userId, current);
-        await group.save();
-        return current;
-    },
-    getWarnings: async (jid, userId) => {
-        const group = await Group.findOne({ jid });
-        return group ? (group.warnings.get(userId) || 0) : 0;
-    },
-    resetWarns: async (jid, userId) => {
-        const group = await Group.findOne({ jid });
-        if (group) {
-            group.warnings.delete(userId);
-            await group.save();
-        }
+// Garante que o ficheiro existe
+function ensureDatabase() {
+    if (!fs.existsSync(databasePath)) {
+        fs.writeFileSync(databasePath, JSON.stringify(database, null, 2));
+        return;
     }
-};
+    try {
+        database = JSON.parse(fs.readFileSync(databasePath, 'utf8'));
+    } catch (error) {
+        console.error('❌ Erro ao ler database.json:', error);
+        database = { groups: {} };
+    }
+}
+
+function saveDatabase() {
+    fs.writeFileSync(databasePath, JSON.stringify(database, null, 2));
+}
+
+function getGroup(jid) {
+    if (!database.groups[jid]) {
+        database.groups[jid] = {
+            antilink: false,
+            antiEstrangeiro: false,
+            antiFoto: false,
+            antiSpam: false,
+            welcome: false,
+            welcomePhoto: false,
+            welcomeMessage: 'Olá @user, bem-vindo(a) ao grupo @group!',
+            rules: 'As regras deste grupo ainda não foram configuradas.',
+            warnLimit: 3,
+            warnings: {},
+            mute: {}
+        };
+        saveDatabase();
+    }
+    return database.groups[jid];
+}
+
+function updateGroup(jid, data) {
+    const group = getGroup(jid);
+    database.groups[jid] = { ...group, ...data };
+    saveDatabase();
+    return database.groups[jid];
+}
+
+function addWarn(jid, user) {
+    const group = getGroup(jid);
+    group.warnings[user] = (group.warnings[user] || 0) + 1;
+    saveDatabase();
+    return group.warnings[user];
+}
+
+function getWarnings(jid, user) {
+    const group = getGroup(jid);
+    return group.warnings[user] || 0;
+}
+
+function resetWarns(jid, user) {
+    const group = getGroup(jid);
+    if (group.warnings[user]) {
+        delete group.warnings[user];
+        saveDatabase();
+    }
+}
+
+ensureDatabase();
+
+module.exports = { getGroup, updateGroup, addWarn, getWarnings, resetWarns };
