@@ -6,42 +6,35 @@ const {
 } = require('@whiskeysockets/baileys');
 const P = require('pino');
 const config = require('../config');
+const { MongoAuthState } = require('wa-mongodb-helper'); // Nova biblioteca
 
 async function connectToWhatsApp() {
-    // Pasta da sessão
-    const { state, saveCreds } = await useMultiFileAuthState('auth_info');
+    // --- AGORA A SESSÃO É SALVA NO MONGODB ---
+    const authState = await MongoAuthState(config.mongoURI, 'sessao_bot');
+    const { state, saveCreds } = authState;
     const { version } = await fetchLatestBaileysVersion();
 
     const sock = makeWASocket({
         version,
         logger: P({ level: 'silent' }),
-        printQRInTerminal: false, // Não imprime QR, vamos usar código
+        printQRInTerminal: false,
         auth: state,
-        // Browser necessário para servidores
-        browser: ["Ubuntu", "Chrome", "20.0.04"], 
+        browser: ["Ubuntu", "Chrome", "20.0.04"],
     });
 
-    // --- PAREAMENTO AUTOMÁTICO (SEM READLINE) ---
     if (!sock.authState.creds.registered) {
-        // Pega o número do dono no config.js
         const phoneNumber = config.owner.replace(/[^0-9]/g, '');
-
-        if (!phoneNumber) {
-            console.error("❌ ERRO: O número do dono não foi configurado no config.js");
-        } else {
-            console.log(`📡 Solicitando código de pareamento para: ${phoneNumber}`);
-            
-            // Aguarda 5 segundos para o servidor estabilizar
-            setTimeout(async () => {
-                try {
-                    let code = await sock.requestPairingCode(phoneNumber);
-                    code = code?.match(/.{1,4}/g)?.join("-") || code;
-                    console.log(`\n✅ SEU CÓDIGO DE ACESSO: ${code}\n`);
-                } catch (error) {
-                    console.error("❌ Erro ao pedir código:", error.message);
-                }
-            }, 5000);
-        }
+        console.log(`📡 Solicitando código para: ${phoneNumber}`);
+        
+        setTimeout(async () => {
+            try {
+                let code = await sock.requestPairingCode(phoneNumber);
+                code = code?.match(/.{1,4}/g)?.join("-") || code;
+                console.log(`\n✅ SEU CÓDIGO DE ACESSO: ${code}\n`);
+            } catch (error) {
+                console.error("Erro ao pedir código:", error.message);
+            }
+        }, 5000);
     }
 
     sock.ev.on('creds.update', saveCreds);
@@ -52,7 +45,7 @@ async function connectToWhatsApp() {
             const shouldReconnect = lastDisconnect.error?.output?.statusCode !== DisconnectReason.loggedOut;
             if (shouldReconnect) connectToWhatsApp();
         } else if (connection === 'open') {
-            console.log('✅ MOBIKE-BOT CONECTADO NA NUVEM!');
+            console.log('✅ CONECTADO E SESSÃO SALVA NO MONGODB!');
         }
     });
 
