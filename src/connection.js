@@ -6,12 +6,10 @@ const {
 } = require('@whiskeysockets/baileys');
 const P = require('pino');
 const config = require('../config');
-const { MongoAuthState } = require('wa-mongodb-helper'); // Nova biblioteca
 
 async function connectToWhatsApp() {
-    // --- AGORA A SESSÃO É SALVA NO MONGODB ---
-    const authState = await MongoAuthState(config.mongoURI, 'sessao_bot');
-    const { state, saveCreds } = authState;
+    // SESSÃO LOCAL NA PASTA auth_info
+    const { state, saveCreds } = await useMultiFileAuthState('auth_info');
     const { version } = await fetchLatestBaileysVersion();
 
     const sock = makeWASocket({
@@ -19,13 +17,12 @@ async function connectToWhatsApp() {
         logger: P({ level: 'silent' }),
         printQRInTerminal: false,
         auth: state,
-        browser: ["Ubuntu", "Chrome", "20.0.04"],
+        browser: ["Mobike Bot", "Chrome", "1.0.0"],
     });
 
     if (!sock.authState.creds.registered) {
         const phoneNumber = config.owner.replace(/[^0-9]/g, '');
-        console.log(`📡 Solicitando código para: ${phoneNumber}`);
-        
+        console.log(`📡 Gerando código para: ${phoneNumber}`);
         setTimeout(async () => {
             try {
                 let code = await sock.requestPairingCode(phoneNumber);
@@ -45,7 +42,7 @@ async function connectToWhatsApp() {
             const shouldReconnect = lastDisconnect.error?.output?.statusCode !== DisconnectReason.loggedOut;
             if (shouldReconnect) connectToWhatsApp();
         } else if (connection === 'open') {
-            console.log('✅ CONECTADO E SESSÃO SALVA NO MONGODB!');
+            console.log('✅ BOT CONECTADO LOCALMENTE!');
         }
     });
 
